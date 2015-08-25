@@ -20,7 +20,7 @@ class ServiceStandards(USPSService):
                   ]
     
     
-    def make_xml(self, data, user_id, password):
+    def make_xml(self, data, user_id):
         """
         Transform the data provided to an XML fragment
         @param userid: the USPS API user id
@@ -30,7 +30,6 @@ class ServiceStandards(USPSService):
         for data_dict in data:
             data_xml = dicttoxml(data_dict, self.SERVICE_NAME+'Request', self.PARAMETERS)
             data_xml.attrib['USERID'] = user_id
-            data_xml.attrib['PASSWORD'] = password
         return data_xml
     
     def parse_xml(self, xml):
@@ -73,7 +72,7 @@ CLASSID_TO_SERVICE = {
                       'Express': [2,3,13,23,25,27]
                       }
     
-def get_service_standards(package_data, url, user_id, password):
+def get_service_standards(package_data, url, user_id):
     """
     Given a package class id return the appropriate service standards api class
     for calculating a domestic service standard or express mail commitment
@@ -91,7 +90,7 @@ def get_service_standards(package_data, url, user_id, password):
         data['DestinationZIP'] = package_data.get('DestinationZip')
         data['Date'] = package_data.get('Date', "")
         
-        connection = ExpressMailServiceCommitment(url, user_id, password)
+        connection = ExpressMailServiceCommitment(url, user_id)
         response = connection.execute([data])[0]   
 
         commitment = response.get('Commitment')
@@ -102,9 +101,9 @@ def get_service_standards(package_data, url, user_id, password):
         
     else:    
         if classid in CLASSID_TO_SERVICE['Package']:
-            connection = PackageServicesServiceStandards(url, user_id, password)
+            connection = PackageServicesServiceStandards(url, user_id)
         elif classid in CLASSID_TO_SERVICE['Priority']:
-            connection = PackageServicesServiceStandards(url, user_id, password)
+            connection = PackageServicesServiceStandards(url, user_id)
 
         if connection:            
             package_data.pop('Date', None)

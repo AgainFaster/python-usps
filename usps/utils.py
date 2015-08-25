@@ -1,23 +1,7 @@
 """
 Utility functions for use in USPS app
 """
-import urllib
-try:
-    from xml.etree import ElementTree as ET
-except ImportError:
-    from elementtree import ElementTree as ET
-    
-def utf8urlencode(data):
-    """
-    utf8 URL encode the given dictionary's data
-    
-    @param data: a dictionary of data to be encoded
-    @return: the dictionary data with values URL encoded
-    """
-    ret = dict()
-    for key, value in data.iteritems():
-        ret[key] = value.encode('utf8')
-    return urllib.urlencode(ret)
+from xml.etree import ElementTree as ET
 
 def dicttoxml(dictionary, tagname, attributes=None):
     """
@@ -39,7 +23,7 @@ def dicttoxml(dictionary, tagname, attributes=None):
             elif value != False:
                 ET.SubElement(element, key).text = value
     else:
-        for key, value in dictionary.iteritems():
+        for key, value in dictionary.items():
             if type(value).__name__ == 'dict':
                 elem = dicttoxml(value, key)
                 element.append(elem)

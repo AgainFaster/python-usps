@@ -7,7 +7,7 @@ class DomesticRateCalculator(USPSService):
     """
     Calculator for domestic shipping rates
     """
-    SERVICE_NAME = 'RateV3'
+    SERVICE_NAME = 'RateV4'
     CHILD_XML_NAME = 'Package'
 
     PARAMETERS = ['Service',
@@ -48,3 +48,5 @@ class InternationalRateCalculator(USPSService):
                   'ValueOfContents',
                   'Country',
                   ]
+
+

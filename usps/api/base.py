@@ -2,14 +2,16 @@
 Base implementation of USPS service wrapper
 """
 
-import urllib, urllib2
-from usps.utils import utf8urlencode, xmltodict, dicttoxml
+import urllib.request
+import urllib.parse
+from usps.utils import xmltodict, dicttoxml
 from usps.errors import USPSXMLError
 
-try:
-    from xml.etree import ElementTree as ET
-except ImportError:
-    from elementtree import ElementTree as ET
+from xml.etree import ElementTree as ET
+
+import logging
+
+logger = logging.getLogger(__file__)
 
 class USPSService(object):
     """
@@ -23,10 +25,9 @@ class USPSService(object):
     def API(self):
         return self.SERVICE_NAME
         
-    def __init__(self, url, user_id, password):
+    def __init__(self, url, user_id):
         self.url = url
         self.user_id = user_id
-        self.password = password
 
     def submit_xml(self, xml):
         """
@@ -36,7 +37,8 @@ class USPSService(object):
         """
         data = {'XML':ET.tostring(xml),
                 'API':self.API}
-        response = urllib2.urlopen(self.url, utf8urlencode(data))
+        response = urllib.request.urlopen(self.url,
+                                          bytes(urllib.parse.urlencode(data), "utf-8"))
         root = ET.parse(response).getroot()
         if root.tag == 'Error':
             raise USPSXMLError(root)
@@ -56,25 +58,25 @@ class USPSService(object):
             items.append(xmltodict(item))
         return items
     
-    def make_xml(self, data, user_id, password=None):
+    def make_xml(self, data, user_id):
         """
         Transform the data provided to an XML fragment
         @param userid: the USPS API user id
         @param data: the data to serialize and send to USPS
         @return: an XML fragment representing data
-        """
+        """       
         root = ET.Element(self.SERVICE_NAME+'Request')
         root.attrib['USERID'] = user_id
-        root.attrib['PASSWORD'] = password
         index = 0
         for data_dict in data:
             data_xml = dicttoxml(data_dict, self.CHILD_XML_NAME, self.PARAMETERS)
             data_xml.attrib['ID'] = str(index)
+            
             root.append(data_xml)
             index += 1
         return root
     
-    def execute(self,data, user_id=None, password=None):
+    def execute(self,data, user_id=None):
         """
         Create XML from data dictionary, submit it to 
         the USPS API and parse the response
@@ -85,9 +87,7 @@ class USPSService(object):
         """
         if user_id is None:
             user_id = self.user_id
-
-        if password is None:
-            password = self.password
             
-        xml = self.make_xml(data, user_id, password)
+        xml = self.make_xml(data, user_id)
+        logger.info("USPS XML Request: %s" % ET.tostring(xml))
         return self.parse_xml(self.submit_xml(xml))
